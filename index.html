@@ -1,0 +1,81 @@
+<html lang="ja-JP">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <meta http-equiv="content-language" content="ja-JP" >
+    <title>ドメイン検索テスト</title>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.0/themes/base/jquery-ui.css" />
+    <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+    <script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
+    <style>
+        .ui-autocomplete-loading {
+            background: white url('./images/ui-anim_basic_16x16.gif') right center no-repeat;
+        }
+        #domain { width: 25em; }
+    </style>
+    <script>
+        var path = "/domain_check/";
+        $(function() {
+            function log( message ) {
+                if(message.match(/^\+/)) {
+                    $( "<div>" ).text( message ).prependTo( "#log" );
+                    $( "#log" ).scrollTop( 0 );
+                } else {
+                    alert("This domain is taken.");
+                    return false;
+                }
+            }
+ 
+            $( "#domain" ).autocomplete({
+                source: function( request, response ) {
+                    $.ajax({
+                        url: path + "search.php",
+                        dataType: "jsonp",
+                        data: {
+                            q: request.term
+                        },
+                        success: function( data ) {
+                            response( $.map( data.domain, function( item ) {
+                                return {
+                                    label: item.available + item.name,
+                                    value: item.name
+                                }
+                            }));
+                            $( "#time" ).html(data.time + " ms");
+                        }
+                    });
+                },
+                minLength: 2,
+                select: function( event, ui ) {
+                    log( ui.item ?
+                    ui.item.label :
+                    "Nothing selected, input was " + this.value);
+                },
+                open: function() {
+                    $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+                },
+                close: function() {
+                    $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+ 
+<div class="ui-widget">
+    <label for="domain">Search Domain: </label>
+    <input id="domain" />
+</div>
+ 
+<div class="ui-widget" style="margin-top: 2em; font-family: Arial;">
+    Selected Domain:
+    <div id="log" style="height: 200px; width: 800px; overflow: auto;" class="ui-widget-content"></div>
+</div>
+ 
+<div class="ui-widget">
+    <label for="time">Search Time: </label>
+    <span id="time"></span>
+</div>
+
+</body>
+</html>
